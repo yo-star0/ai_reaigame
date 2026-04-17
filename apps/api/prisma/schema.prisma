@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  firebaseUid   String         @unique
+  displayName   String?
+  createdAt     DateTime       @default(now())
+  conversations Conversation[]
+}
+
+model Character {
+  id            String         @id
+  name          String
+  tagline       String
+  avatarUrl     String
+  systemPrompt  String
+  openingText   String
+  createdAt     DateTime       @default(now())
+  conversations Conversation[]
+}
+
+model Conversation {
+  id                    String    @id @default(cuid())
+  userId                String
+  characterId           String
+  affinity              Int       @default(0)
+  hasSeenOpening        Boolean   @default(false)
+  summary               String?
+  summaryUntilMessageId String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([userId, characterId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  affinityDelta  Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
