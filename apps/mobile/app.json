@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "ai_reaigame",
+    "slug": "ai-reaigame",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "aireaigame",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.reaigame.app"
+    },
+    "android": {
+      "package": "dev.reaigame.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000/api/v1",
+      "firebaseApiKey": "",
+      "firebaseAuthDomain": "",
+      "firebaseProjectId": "",
+      "firebaseAppId": "",
+      "devBypass": true
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

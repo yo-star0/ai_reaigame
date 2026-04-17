@@ -1,0 +1,101 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useApi } from '@/lib/apiProvider';
+
+export default function CharacterDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const characterId = Array.isArray(id) ? id[0] : id;
+  const router = useRouter();
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['character', characterId],
+    queryFn: () => api.getCharacter(characterId!),
+    enabled: !!characterId,
+  });
+
+  const completeOpening = useMutation({
+    mutationFn: () => api.completeOpening(characterId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['character', characterId] }),
+  });
+
+  if (isLoading || !data) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  const onStart = () => {
+    if (!data.hasSeenOpening) {
+      router.push({ pathname: '/characters/[id]/opening', params: { id: characterId! } });
+    } else {
+      router.push({ pathname: '/characters/[id]/chat', params: { id: characterId! } });
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.body}>
+        <Image source={{ uri: data.avatarUrl }} style={styles.avatar} />
+        <Text style={styles.name}>{data.name}</Text>
+        <Text style={styles.tagline}>{data.tagline}</Text>
+
+        <View style={styles.affinityBox}>
+          <Text style={styles.affinityLabel}>好感度</Text>
+          <Text style={styles.affinityValue}>{data.affinity}</Text>
+        </View>
+
+        <Pressable style={styles.primary} onPress={onStart}>
+          <Text style={styles.primaryText}>
+            {data.hasSeenOpening ? '会話を続ける' : '物語を始める'}
+          </Text>
+        </Pressable>
+
+        {__DEV__ && data.hasSeenOpening && (
+          <Pressable onPress={() => completeOpening.mutate()} style={styles.secondary}>
+            <Text style={styles.secondaryText}>（DEV）冒頭を再表示する</Text>
+          </Pressable>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fafafa' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  body: { alignItems: 'center', padding: 24 },
+  avatar: { width: 160, height: 160, borderRadius: 80, backgroundColor: '#eee' },
+  name: { fontSize: 28, fontWeight: '700', marginTop: 16 },
+  tagline: { color: '#666', marginTop: 4, textAlign: 'center' },
+  affinityBox: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff0f4',
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  affinityLabel: { color: '#e66084', fontWeight: '600', marginRight: 8 },
+  affinityValue: { color: '#e66084', fontWeight: '700', fontSize: 16 },
+  primary: {
+    marginTop: 24,
+    backgroundColor: '#e66084',
+    paddingVertical: 14,
+    paddingHorizontal: 36,
+    borderRadius: 24,
+  },
+  primaryText: { color: '#fff', fontWeight: '700' },
+  secondary: {
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  secondaryText: { color: '#888' },
+});
