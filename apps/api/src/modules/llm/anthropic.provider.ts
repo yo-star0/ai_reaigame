@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Anthropic from '@anthropic-ai/sdk';
+import { ChatAnthropic } from '@langchain/anthropic';
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  BaseMessage,
+} from '@langchain/core/messages';
 import {
   LlmCompletionRequest,
   LlmCompletionResponse,
@@ -11,32 +17,35 @@ import {
 export class AnthropicProvider implements LlmProvider {
   readonly name = 'anthropic';
   private readonly logger = new Logger(AnthropicProvider.name);
-  private readonly client: Anthropic;
-  private readonly model: string;
+  private readonly chat: ChatAnthropic;
 
   constructor(config: ConfigService) {
     const apiKey = config.get<string>('ANTHROPIC_API_KEY');
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY is required for AnthropicProvider');
     }
-    this.client = new Anthropic({ apiKey });
-    this.model = config.get<string>('ANTHROPIC_MODEL') ?? 'claude-sonnet-4-6';
+    this.chat = new ChatAnthropic({
+      apiKey,
+      model: config.get<string>('ANTHROPIC_MODEL') ?? 'claude-sonnet-4-6',
+      maxTokens: 512,
+    });
   }
 
   async complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse> {
-    const res = await this.client.messages.create({
-      model: this.model,
-      max_tokens: req.maxTokens ?? 512,
-      system: req.systemPrompt,
-      messages: req.messages
-        .filter((m): m is { role: 'user' | 'assistant'; content: string } => m.role !== 'system')
-        .map((m) => ({ role: m.role, content: m.content })),
+    const messages: BaseMessage[] = [new SystemMessage(req.systemPrompt)];
+    for (const m of req.messages) {
+      if (m.role === 'user') messages.push(new HumanMessage(m.content));
+      else if (m.role === 'assistant') messages.push(new AIMessage(m.content));
+    }
+    const res = await this.chat.invoke(messages, {
+      configurable: { maxTokens: req.maxTokens ?? 512 },
     });
-    const text = res.content
-      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-      .map((block) => block.text)
-      .join('');
-    this.logger.debug(`anthropic reply length=${text.length}`);
+    const text = typeof res.content === 'string'
+      ? res.content
+      : res.content
+          .map((c) => (typeof c === 'string' ? c : 'text' in c ? c.text : ''))
+          .join('');
+    this.logger.debug(`langchain-anthropic reply length=${text.length}`);
     return { rawText: text };
   }
 }

@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { LLM_PROVIDER, LlmMessage, LlmProvider } from '../llm/llm.provider';
+import { SummaryService } from '../rag/summary.service';
 import { llmReplyJsonSchema } from '@ai-reaigame/shared';
 import { Conversation, Message } from '@prisma/client';
 
@@ -16,6 +17,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
+    private readonly summary: SummaryService,
     @Inject(LLM_PROVIDER) private readonly llm: LlmProvider,
   ) {}
 
@@ -82,6 +84,10 @@ export class ChatService {
         data: { affinity: newAffinity },
       }),
     ]);
+
+    void this.summary
+      .updateIfNeeded(conversation.id)
+      .catch((err) => this.logger.warn(`summary update failed: ${(err as Error).message}`));
 
     return {
       user: this.toDto(userMessage),
