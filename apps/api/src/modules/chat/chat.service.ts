@@ -3,12 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { LLM_PROVIDER, LlmMessage, LlmProvider } from '../llm/llm.provider';
 import { SummaryService } from '../rag/summary.service';
-import { llmReplyJsonSchema } from '@ai-reaigame/shared';
 import { Conversation, Message } from '@prisma/client';
+import { clampAffinity, parseLlmReply } from './parse-reply';
 
 const MAX_RAW_MESSAGES = 6;
-const AFFINITY_MIN = -100;
-const AFFINITY_MAX = 100;
 
 @Injectable()
 export class ChatService {
@@ -67,8 +65,8 @@ export class ChatService {
       });
     }
 
-    const { reply, affinityDelta } = this.parseReply(rawText);
-    const newAffinity = this.clampAffinity(conversation.affinity + affinityDelta);
+    const { reply, affinityDelta } = parseLlmReply(rawText);
+    const newAffinity = clampAffinity(conversation.affinity + affinityDelta);
 
     const [assistantMessage, updatedConversation] = await this.prisma.$transaction([
       this.prisma.message.create({
@@ -125,24 +123,6 @@ export class ChatService {
       lines.push('', '【これまでの関係の要約】', conversation.summary);
     }
     return lines.join('\n');
-  }
-
-  private parseReply(rawText: string): { reply: string; affinityDelta: number } {
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { reply: rawText.trim() || '…（沈黙）', affinityDelta: 0 };
-    }
-    try {
-      const parsed = llmReplyJsonSchema.parse(JSON.parse(jsonMatch[0]));
-      return { reply: parsed.reply, affinityDelta: parsed.affinity_delta };
-    } catch (err) {
-      this.logger.warn(`Failed to parse LLM JSON, falling back to raw text: ${(err as Error).message}`);
-      return { reply: rawText.trim(), affinityDelta: 0 };
-    }
-  }
-
-  private clampAffinity(value: number): number {
-    return Math.max(AFFINITY_MIN, Math.min(AFFINITY_MAX, value));
   }
 
   private toDto(m: Message) {

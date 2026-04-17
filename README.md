@@ -16,6 +16,47 @@ AI×恋愛シミュレーションモバイルアプリ（2週間デモ版）。
 | Firebase Authentication | `FirebaseAuthGuard` + JS SDKログイン、未設定時はDEVバイパス |
 | モノレポ | pnpm workspaces + Turborepo (`apps/*`, `packages/*`) |
 
+## アーキテクチャ
+
+```mermaid
+flowchart LR
+  subgraph Mobile[Expo Mobile]
+    UI[Expo Router Screens]
+    FBAuth[Firebase JS SDK]
+  end
+
+  subgraph API[NestJS API]
+    Guard[FirebaseAuthGuard]
+    Chat[ChatService]
+    LLM[LLMProvider<br/>抽象]
+    Anthropic[AnthropicProvider<br/>LangChain.js]
+    Summary[SummaryService<br/>会話要約RAG]
+    Prisma[PrismaClient]
+  end
+
+  subgraph External
+    FB[(Firebase Auth)]
+    Claude[(Anthropic Claude)]
+    PG[(PostgreSQL)]
+  end
+
+  UI -->|HTTPS<br/>Bearer Token| Guard
+  FBAuth <--> FB
+  Guard --> Chat
+  Chat --> Prisma --> PG
+  Chat --> LLM --> Anthropic --> Claude
+  Chat -.fire-and-forget.-> Summary --> LLM
+```
+
+### LLMProvider抽象でBedrock差し替えを想定
+
+```
+LLMProvider (interface)
+├── AnthropicProvider   # 現在利用中 (LangChain + Anthropic API)
+├── BedrockProvider     # v2で追加予定 (@langchain/aws の ChatBedrock)
+└── StubProvider        # ANTHROPIC_API_KEY 未設定時 / テスト時
+```
+
 ## 技術スタック
 
 - **Frontend (Mobile)**: Expo SDK 52 / React Native 0.76 / Expo Router / TanStack Query / Firebase JS SDK v10

@@ -33,6 +33,9 @@ jobs:
       - name: Typecheck
         run: pnpm -r typecheck
 
+      - name: Test
+        run: pnpm --filter @ai-reaigame/api test
+
   docker-api:
     runs-on: ubuntu-latest
     steps:
