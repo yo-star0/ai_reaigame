@@ -1,10 +1,11 @@
 import type { Message, SendMessageResponse } from '@ai-reaigame/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,11 +15,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AffinityBar } from '@/components/AffinityBar';
+import { TypingIndicator } from '@/components/TypingIndicator';
 import { useApi } from '@/lib/apiProvider';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const characterId = Array.isArray(id) ? id[0] : id;
+  const router = useRouter();
   const api = useApi();
   const queryClient = useQueryClient();
 
@@ -60,11 +64,11 @@ export default function ChatScreen() {
           return { items: [res.assistant, res.user, ...items], nextCursor: old?.nextCursor ?? null };
         },
       );
-      queryClient.setQueryData(['character', characterId], (old: ReturnType<typeof Object> | undefined) => {
+      queryClient.setQueryData(['character', characterId], (old: unknown) => {
         if (!old || typeof old !== 'object') return old;
         return { ...(old as Record<string, unknown>), affinity: res.affinity };
       });
-      setTimeout(() => setRecentDelta(null), 1800);
+      setTimeout(() => setRecentDelta(null), 2000);
     },
   });
 
@@ -83,17 +87,28 @@ export default function ChatScreen() {
     );
   }
 
+  const character = characterQuery.data;
+  const affinity = character?.affinity ?? 0;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{characterQuery.data?.name ?? ''}</Text>
-        <View style={styles.affinityPill}>
-          <Text style={styles.affinityText}>好感度 {characterQuery.data?.affinity ?? 0}</Text>
-          {recentDelta !== null && (
-            <Text style={[styles.delta, recentDelta < 0 && styles.deltaNeg]}>
-              {recentDelta > 0 ? `+${recentDelta}` : recentDelta}
-            </Text>
-          )}
+        <Pressable onPress={() => router.back()} style={styles.back} hitSlop={8}>
+          <Text style={styles.backText}>‹</Text>
+        </Pressable>
+        {character?.avatarUrl && (
+          <Image source={{ uri: character.avatarUrl }} style={styles.headerAvatar} />
+        )}
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.headerTitleRow}>
+            <Text style={styles.headerTitle}>{character?.name ?? ''}</Text>
+            {recentDelta !== null && (
+              <Text style={[styles.delta, recentDelta < 0 && styles.deltaNeg]}>
+                {recentDelta > 0 ? `+${recentDelta}` : recentDelta}
+              </Text>
+            )}
+          </View>
+          <AffinityBar value={affinity} compact />
         </View>
       </View>
 
@@ -105,9 +120,12 @@ export default function ChatScreen() {
           ref={listRef}
           data={orderedMessages}
           keyExtractor={(m) => m.id}
-          contentContainerStyle={{ padding: 16 }}
-          renderItem={({ item }) => <MessageBubble message={item} />}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <MessageBubble message={item} avatarUrl={character?.avatarUrl} />
+          )}
           ListEmptyComponent={<Text style={styles.empty}>話しかけてみよう</Text>}
+          ListFooterComponent={sendMutation.isPending ? <TypingIndicator /> : null}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
 
@@ -136,55 +154,63 @@ export default function ChatScreen() {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, avatarUrl }: { message: Message; avatarUrl?: string }) {
   const isUser = message.role === 'user';
+  if (isUser) {
+    return (
+      <View style={[styles.row, styles.rowUser]}>
+        <View style={[styles.bubble, styles.bubbleUser]}>
+          <Text style={styles.textUser}>{message.content}</Text>
+        </View>
+      </View>
+    );
+  }
   return (
-    <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
-      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
-        <Text style={isUser ? styles.textUser : styles.textAssistant}>{message.content}</Text>
+    <View style={[styles.row, styles.rowAssistant]}>
+      {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.bubbleAvatar} /> : <View style={styles.bubbleAvatarFallback} />}
+      <View style={[styles.bubble, styles.bubbleAssistant]}>
+        <Text style={styles.textAssistant}>{message.content}</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fafafa' },
+  container: { flex: 1, backgroundColor: '#fbf7f8' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
+    backgroundColor: '#fff',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderBottomColor: '#e8d8de',
   },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
-  affinityPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff0f4',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  affinityText: { color: '#e66084', fontWeight: '600' },
-  delta: { marginLeft: 6, color: '#2a8a4e', fontWeight: '700' },
+  back: { paddingHorizontal: 6, paddingVertical: 2 },
+  backText: { fontSize: 26, color: '#e66084', lineHeight: 26 },
+  headerAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee', marginLeft: 4 },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  headerTitle: { fontSize: 16, fontWeight: '700', marginRight: 8 },
+  delta: { color: '#2a8a4e', fontWeight: '700' },
   deltaNeg: { color: '#b04040' },
   empty: { textAlign: 'center', color: '#888', marginTop: 48 },
-  row: { marginBottom: 8, flexDirection: 'row' },
+  listContent: { padding: 16 },
+  row: { marginBottom: 10, flexDirection: 'row', alignItems: 'flex-end' },
   rowUser: { justifyContent: 'flex-end' },
   rowAssistant: { justifyContent: 'flex-start' },
-  bubble: { maxWidth: '78%', padding: 10, borderRadius: 14 },
+  bubbleAvatar: { width: 32, height: 32, borderRadius: 16, marginRight: 8, backgroundColor: '#eee' },
+  bubbleAvatarFallback: { width: 32, height: 32, borderRadius: 16, marginRight: 8, backgroundColor: '#eee' },
+  bubble: { maxWidth: '74%', padding: 10, borderRadius: 14 },
   bubbleUser: { backgroundColor: '#e66084' },
-  bubbleAssistant: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee' },
-  textUser: { color: '#fff' },
-  textAssistant: { color: '#222' },
+  bubbleAssistant: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0e0e6' },
+  textUser: { color: '#fff', lineHeight: 20 },
+  textAssistant: { color: '#333', lineHeight: 20 },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#ddd',
+    borderTopColor: '#e8d8de',
     backgroundColor: '#fff',
   },
   input: {
@@ -193,7 +219,7 @@ const styles = StyleSheet.create({
     maxHeight: 120,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#f8eef2',
     borderRadius: 12,
     marginRight: 8,
   },

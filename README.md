@@ -11,10 +11,14 @@ AI×恋愛シミュレーションモバイルアプリ（2週間デモ版）。
 | NestJS / TypeScript | `apps/api` モジュール分割（auth / users / characters / chat / llm / rag） |
 | PostgreSQL / Prisma | Prisma schema 4モデル + migrate + seed |
 | Docker → ECR/ECS | `apps/api/Dockerfile` multi-stage + docker-compose。CDKはv2送り |
-| AWS (Bedrock等) | `LLMProvider` 抽象、Anthropic API実装。Bedrockへは追加実装のみで差し替え可 |
-| LLM / LangChain / RAG | `@langchain/anthropic` + `SummaryService`（会話要約でRAG相当） |
+| AWS (Bedrock等) | `LLMProvider` 抽象 + `BedrockProvider`（`@langchain/aws`）。AWS資格情報を環境変数に入れるだけで有効化 |
+| LLM / LangChain / RAG | `@langchain/anthropic` / `@langchain/google-genai` / `@langchain/aws` を1つの抽象で束ね、`SummaryService` が会話要約をRAG的に再注入 |
 | Firebase Authentication | `FirebaseAuthGuard` + JS SDKログイン、未設定時はDEVバイパス |
 | モノレポ | pnpm workspaces + Turborepo (`apps/*`, `packages/*`) |
+
+## 公開デモ（URLで見せる）
+
+`docs/deploy.md` に Render + Vercel + Neon + Gemini（すべて無料枠）でURL公開する手順を書きました。合計30〜45分、クレカ不要。
 
 ## アーキテクチャ
 

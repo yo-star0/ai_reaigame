@@ -30,7 +30,9 @@ COPY --from=builder /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /repo/apps/api/dist ./apps/api/dist
 COPY --from=builder /repo/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /repo/apps/api/package.json ./apps/api/package.json
+COPY apps/api/entrypoint.sh /app/apps/api/entrypoint.sh
+RUN chmod +x /app/apps/api/entrypoint.sh
 
 WORKDIR /app/apps/api
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["/app/apps/api/entrypoint.sh"]

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AffinityBar } from '@/components/AffinityBar';
 import { useApi } from '@/lib/apiProvider';
 
 export default function CharacterDetailScreen() {
@@ -43,9 +44,8 @@ export default function CharacterDetailScreen() {
         <Text style={styles.name}>{data.name}</Text>
         <Text style={styles.tagline}>{data.tagline}</Text>
 
-        <View style={styles.affinityBox}>
-          <Text style={styles.affinityLabel}>好感度</Text>
-          <Text style={styles.affinityValue}>{data.affinity}</Text>
+        <View style={styles.affinityWrap}>
+          <AffinityBar value={data.affinity} />
         </View>
 
         <Pressable style={styles.primary} onPress={onStart}>
@@ -71,17 +71,7 @@ const styles = StyleSheet.create({
   avatar: { width: 160, height: 160, borderRadius: 80, backgroundColor: '#eee' },
   name: { fontSize: 28, fontWeight: '700', marginTop: 16 },
   tagline: { color: '#666', marginTop: 4, textAlign: 'center' },
-  affinityBox: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff0f4',
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  affinityLabel: { color: '#e66084', fontWeight: '600', marginRight: 8 },
-  affinityValue: { color: '#e66084', fontWeight: '700', fontSize: 16 },
+  affinityWrap: { marginTop: 20, width: '100%', paddingHorizontal: 16 },
   primary: {
     marginTop: 24,
     backgroundColor: '#e66084',
