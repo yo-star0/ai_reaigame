@@ -14,7 +14,8 @@ RUN pnpm install --frozen-lockfile --filter=@ai-reaigame/api... --prod=false
 FROM deps AS builder
 COPY packages/shared packages/shared
 COPY apps/api apps/api
-RUN pnpm --filter @ai-reaigame/api exec prisma generate \
+RUN pnpm --filter @ai-reaigame/shared build \
+ && pnpm --filter @ai-reaigame/api exec prisma generate \
  && pnpm --filter @ai-reaigame/api run build
 
 # -------- runner stage: minimal runtime --------

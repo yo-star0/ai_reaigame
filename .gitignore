@@ -4,6 +4,7 @@ dist/
 build/
 .turbo/
 coverage/
+packages/shared/dist/
 
 .env
 .env.local

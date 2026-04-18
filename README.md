@@ -81,10 +81,11 @@ docker-compose.yml    # Postgres (+ api profile)
 
 ## ローカル起動（開発）
 
-### 1. 依存インストール
+### 1. 依存インストール + shared ビルド
 
 ```bash
 pnpm install
+pnpm build:shared        # 共有パッケージを一度ビルド（API/Mobileの前提）
 ```
 
 ### 2. 環境変数
