@@ -108,6 +108,9 @@ importers:
       '@ai-reaigame/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@babel/runtime':
+        specifier: ^7.26.0
+        version: 7.29.2
       '@react-native-async-storage/async-storage':
         specifier: 1.23.1
         version: 1.23.1(react-native@0.76.3(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))
