@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,17 +9,11 @@ export default function CharacterDetailScreen() {
   const characterId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
   const api = useApi();
-  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['character', characterId],
     queryFn: () => api.getCharacter(characterId!),
     enabled: !!characterId,
-  });
-
-  const completeOpening = useMutation({
-    mutationFn: () => api.completeOpening(characterId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['character', characterId] }),
   });
 
   if (isLoading || !data) {
@@ -36,6 +30,10 @@ export default function CharacterDetailScreen() {
     } else {
       router.push({ pathname: '/characters/[id]/chat', params: { id: characterId! } });
     }
+  };
+
+  const onReplayOpening = () => {
+    router.push({ pathname: '/characters/[id]/opening', params: { id: characterId! } });
   };
 
   return (
@@ -56,9 +54,9 @@ export default function CharacterDetailScreen() {
           </Text>
         </Pressable>
 
-        {__DEV__ && data.hasSeenOpening && (
-          <Pressable onPress={() => completeOpening.mutate()} style={styles.secondary}>
-            <Text style={styles.secondaryText}>（DEV）冒頭を再表示する</Text>
+        {data.hasSeenOpening && (
+          <Pressable onPress={onReplayOpening} style={styles.secondary}>
+            <Text style={styles.secondaryText}>冒頭シーンをもう一度見る</Text>
           </Pressable>
         )}
       </ScrollView>
