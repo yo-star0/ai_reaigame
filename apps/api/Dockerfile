@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 FROM node:22.22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN apk add --no-cache openssl libc6-compat \
+ && corepack enable && corepack prepare pnpm@10.33.0 --activate
 WORKDIR /repo
 
 # -------- deps stage: copy manifests and install --------
@@ -20,7 +21,8 @@ RUN pnpm --filter @ai-reaigame/shared build \
 
 # -------- runner stage: minimal runtime --------
 FROM node:22.22-alpine AS runner
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN apk add --no-cache openssl libc6-compat \
+ && corepack enable && corepack prepare pnpm@10.33.0 --activate
 WORKDIR /app
 ENV NODE_ENV=production
 
