@@ -246,6 +246,37 @@
     font-size: 0.92em;
     font-family: ui-monospace, monospace;
   }
+  .tree {
+    background: #2a2330;
+    color: #f6eef2;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .tree .dir { color: #f8b4c8; font-weight: 700; }
+  .tree .file { color: #fef1f4; }
+  .tree .comment { color: #a896a3; font-style: italic; }
+  .tree .section { color: #ffd9e3; font-weight: 700; display: block; margin-top: 12px; border-top: 1px solid #4a3d48; padding-top: 10px; }
+  .tree .section:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .counts .box {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .counts .n { font-size: 26px; font-weight: 700; color: var(--pink); display: block; }
+  .counts .l { font-size: 12px; color: var(--gray); }
 </style>
 </head>
 <body>
@@ -368,6 +399,120 @@
     <div class="role">AI駆動開発</div>
     <div class="what">AIアシスタントに「仕様書を見ながら実装して」と頼んで作る進め方。仕様と実装のズレを防げる。</div>
   </div>
+</div>
+
+<h2>実際に触ったフォルダとファイル</h2>
+<p>自分で書いた（ライブラリの中身ではなく）コードはこの範囲です。合計 <strong>約2,245行のTypeScript</strong>、テストを除くと49ファイル。</p>
+
+<div class="counts">
+  <div class="box"><span class="n">2,245</span><span class="l">手書きTS/TSX行数</span></div>
+  <div class="box"><span class="n">30</span><span class="l">API TSファイル</span></div>
+  <div class="box"><span class="n">15</span><span class="l">Mobile TS/TSXファイル</span></div>
+  <div class="box"><span class="n">4</span><span class="l">共有スキーマファイル</span></div>
+</div>
+
+<div class="tree">
+<span class="section">■ サーバー側 — apps/api/</span>
+<span class="dir">apps/api/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="file">main.ts</span>                          <span class="comment"># NestJS起動、CORS設定、ポート設定</span>
+│   ├── <span class="file">app.module.ts</span>                    <span class="comment"># 全モジュールの取りまとめ</span>
+│   └── <span class="dir">modules/</span>
+│       ├── <span class="dir">auth/</span>
+│       │   ├── <span class="file">firebase.service.ts</span>        <span class="comment"># Firebase Admin初期化＋DEVバイパス</span>
+│       │   ├── <span class="file">firebase-auth.guard.ts</span>     <span class="comment"># IDトークン検証ガード</span>
+│       │   ├── <span class="file">current-user.decorator.ts</span>  <span class="comment"># @CurrentAuth() デコレータ</span>
+│       │   └── <span class="file">auth.module.ts</span>
+│       ├── <span class="dir">users/</span>                         <span class="comment"># /me エンドポイント、ユーザー自動作成</span>
+│       ├── <span class="dir">characters/</span>                    <span class="comment"># キャラ一覧・詳細API、hana seed</span>
+│       ├── <span class="dir">chat/</span>
+│       │   ├── <span class="file">chat.controller.ts</span>         <span class="comment"># /characters/:id/messages</span>
+│       │   ├── <span class="file">chat.service.ts</span>            <span class="comment"># 会話ロジック本体</span>
+│       │   ├── <span class="file">parse-reply.ts</span>             <span class="comment"># JSON応答パーサー＋好感度クランプ</span>
+│       │   ├── <span class="file">parse-reply.spec.ts</span>        <span class="comment"># Jest 7ケース</span>
+│       │   └── <span class="file">send-message.dto.ts</span>
+│       ├── <span class="dir">llm/</span>
+│       │   ├── <span class="file">llm.provider.ts</span>            <span class="comment"># 抽象インターフェース</span>
+│       │   ├── <span class="file">anthropic.provider.ts</span>      <span class="comment"># Claude（LangChain）</span>
+│       │   ├── <span class="file">gemini.provider.ts</span>         <span class="comment"># Gemini（LangChain）</span>
+│       │   ├── <span class="file">bedrock.provider.ts</span>        <span class="comment"># AWS Bedrock（LangChain）</span>
+│       │   ├── <span class="file">stub.provider.ts</span>           <span class="comment"># APIキー無しデモ用</span>
+│       │   └── <span class="file">llm.module.ts</span>              <span class="comment"># 4プロバイダー自動選択ファクトリー</span>
+│       ├── <span class="dir">rag/</span>
+│       │   └── <span class="file">summary.service.ts</span>         <span class="comment"># 会話要約RAG（10往復ごとに更新）</span>
+│       ├── <span class="dir">prisma/</span>                        <span class="comment"># PrismaClientサービス</span>
+│       └── <span class="dir">health/</span>                        <span class="comment"># /health</span>
+├── <span class="dir">prisma/</span>
+│   ├── <span class="file">schema.prisma</span>                    <span class="comment"># 4モデル定義</span>
+│   ├── <span class="file">seed.ts</span>                          <span class="comment"># hana投入スクリプト</span>
+│   └── <span class="dir">migrations/</span>                       <span class="comment"># 初回マイグレーションSQL</span>
+├── <span class="file">Dockerfile</span>                           <span class="comment"># マルチステージ（deps / builder / runner）</span>
+├── <span class="file">entrypoint.sh</span>                        <span class="comment"># db push → seed → 起動</span>
+├── <span class="file">jest.config.js</span>
+├── <span class="file">tsconfig.json</span>
+├── <span class="file">.env.example</span>
+└── <span class="file">package.json</span>
+
+<span class="section">■ モバイル・Web側 — apps/mobile/</span>
+<span class="dir">apps/mobile/</span>
+├── <span class="dir">app/</span>                                   <span class="comment"># Expo Routerの画面（ファイル名=URL）</span>
+│   ├── <span class="file">_layout.tsx</span>                      <span class="comment"># 認証ゲート、Providers統合</span>
+│   ├── <span class="file">index.tsx</span>                        <span class="comment"># ログイン済みなら /characters へ</span>
+│   ├── <span class="file">login.tsx</span>                        <span class="comment"># Firebase / DEVバイパス両対応</span>
+│   └── <span class="dir">characters/</span>
+│       ├── <span class="file">index.tsx</span>                    <span class="comment"># ヒロイン一覧</span>
+│       └── <span class="dir">[id]/</span>
+│           ├── <span class="file">index.tsx</span>                <span class="comment"># 詳細＋好感度バー</span>
+│           ├── <span class="file">opening.tsx</span>              <span class="comment"># 冒頭シーン（タップ進行）</span>
+│           └── <span class="file">chat.tsx</span>                 <span class="comment"># AIチャット画面</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">auth/</span>
+│   │   └── <span class="file">AuthContext.tsx</span>              <span class="comment"># useAuth() フック</span>
+│   ├── <span class="dir">lib/</span>
+│   │   ├── <span class="file">api.ts</span>                       <span class="comment"># Bearer付きfetchクライアント</span>
+│   │   ├── <span class="file">apiProvider.tsx</span>              <span class="comment"># ApiContextとProvider</span>
+│   │   ├── <span class="file">config.ts</span>                    <span class="comment"># EXPO_PUBLIC_* 読み込み</span>
+│   │   ├── <span class="file">firebase.ts</span>                  <span class="comment"># Firebase JS SDK初期化</span>
+│   │   └── <span class="file">firebase-augment.d.ts</span>        <span class="comment"># 型補強</span>
+│   └── <span class="dir">components/</span>
+│       ├── <span class="file">AffinityBar.tsx</span>              <span class="comment"># 好感度プログレスバー＋段階ラベル</span>
+│       └── <span class="file">TypingIndicator.tsx</span>          <span class="comment"># reanimatedで跳ねる3点リーダー</span>
+├── <span class="file">app.json</span>                             <span class="comment"># Expo設定（scheme, 新アーキ有効）</span>
+├── <span class="file">metro.config.js</span>                      <span class="comment"># pnpmワークスペース対応</span>
+├── <span class="file">babel.config.js</span>
+├── <span class="file">tsconfig.json</span>
+├── <span class="file">.env.example</span>
+└── <span class="file">package.json</span>
+
+<span class="section">■ 共有パッケージ — packages/shared/</span>
+<span class="dir">packages/shared/src/</span>
+├── <span class="file">index.ts</span>
+└── <span class="dir">schemas/</span>                              <span class="comment"># API/Mobile間の型共有（zod）</span>
+    ├── <span class="file">chat.ts</span>                          <span class="comment"># メッセージ＋LLM応答JSON</span>
+    ├── <span class="file">character.ts</span>
+    └── <span class="file">user.ts</span>
+
+<span class="section">■ ドキュメント — docs/</span>
+<span class="dir">docs/</span>
+├── <span class="dir">specs/</span>
+│   └── <span class="file">MVP.md</span>                           <span class="comment"># SDD仕様書（US-01〜06／API／DB）</span>
+├── <span class="file">deploy.md</span>                            <span class="comment"># Render + Vercel + Neon手順</span>
+├── <span class="file">demo.md</span>                              <span class="comment"># 3〜5分のデモ録画台本</span>
+└── <span class="file">report.html</span>                          <span class="comment"># 本レポート</span>
+
+<span class="section">■ Claude Code用スラッシュコマンド — .claude/</span>
+<span class="dir">.claude/commands/</span>
+├── <span class="file">implement.md</span>                         <span class="comment"># /implement （spec参照を強制）</span>
+└── <span class="file">spec-review.md</span>                       <span class="comment"># /spec-review （差分監査）</span>
+
+<span class="section">■ インフラ・CI — リポジトリルート</span>
+<span class="file">docker-compose.yml</span>                         <span class="comment"># ローカル用Postgres</span>
+<span class="file">render.yaml</span>                                <span class="comment"># Render Blueprint（API Docker起動）</span>
+<span class="file">vercel.json</span>                                <span class="comment"># Vercel（Expo Webビルド設定）</span>
+<span class="file">.github/workflows/ci.yml</span>                   <span class="comment"># lint / typecheck / test / docker build</span>
+<span class="file">pnpm-workspace.yaml</span>                        <span class="comment"># モノレポ定義</span>
+<span class="file">turbo.json</span>                                 <span class="comment"># タスクキャッシュ</span>
+<span class="file">.npmrc</span>                                     <span class="comment"># pnpm設定（Expoとの互換調整）</span>
 </div>
 
 <h2>求人で求められていた技術 ＝ 実装した技術</h2>
