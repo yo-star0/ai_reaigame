@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AffinityBar } from '@/components/AffinityBar';
+import { CharacterStage, moodFromDelta } from '@/components/CharacterStage';
 import { TypingIndicator } from '@/components/TypingIndicator';
 import { useApi } from '@/lib/apiProvider';
 
@@ -96,10 +97,7 @@ export default function ChatScreen() {
         <Pressable onPress={() => router.back()} style={styles.back} hitSlop={8}>
           <Text style={styles.backText}>‹</Text>
         </Pressable>
-        {character?.avatarUrl && (
-          <Image source={{ uri: character.avatarUrl }} style={styles.headerAvatar} />
-        )}
-        <View style={{ flex: 1, marginLeft: 10 }}>
+        <View style={{ flex: 1, marginLeft: 4 }}>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>{character?.name ?? ''}</Text>
             {recentDelta !== null && (
@@ -111,6 +109,18 @@ export default function ChatScreen() {
           <AffinityBar value={affinity} compact />
         </View>
       </View>
+
+      {character?.avatarUrl && (
+        <View style={styles.stageWrap}>
+          <CharacterStage
+            avatarUrl={character.avatarUrl}
+            mood={moodFromDelta(recentDelta)}
+            thinking={sendMutation.isPending}
+            affinity={affinity}
+            size={140}
+          />
+        </View>
+      )}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -189,6 +199,7 @@ const styles = StyleSheet.create({
   back: { paddingHorizontal: 6, paddingVertical: 2 },
   backText: { fontSize: 26, color: '#e66084', lineHeight: 26 },
   headerAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee', marginLeft: 4 },
+  stageWrap: { alignItems: 'center', paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#f0dae2' },
   headerTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   headerTitle: { fontSize: 16, fontWeight: '700', marginRight: 8 },
   delta: { color: '#2a8a4e', fontWeight: '700' },
