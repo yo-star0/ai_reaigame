@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ai_reaigame — 開発レポート</title>
+<style>
+  :root {
+    --pink: #e66084;
+    --pink-light: #fff0f4;
+    --pink-bg: #fbf7f8;
+    --ink: #2a2330;
+    --gray: #6b6373;
+    --line: #ebd9e0;
+    --ok: #2a8a4e;
+    --warn: #c97a1a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    color: var(--ink);
+    background: var(--pink-bg);
+    line-height: 1.7;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px; }
+  header.hero {
+    background: linear-gradient(135deg, #f8d3df 0%, #ffeef3 100%);
+    padding: 56px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  header.hero h1 {
+    font-size: 40px;
+    margin: 0 0 8px;
+    color: var(--pink);
+    letter-spacing: 0.02em;
+  }
+  header.hero .sub {
+    font-size: 16px;
+    color: var(--gray);
+    margin: 0;
+  }
+  header.hero .badges {
+    margin-top: 24px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-block;
+    background: white;
+    border: 1px solid var(--line);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--gray);
+  }
+  h2 {
+    font-size: 24px;
+    color: var(--pink);
+    border-left: 4px solid var(--pink);
+    padding-left: 12px;
+    margin-top: 56px;
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 16px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+  p { margin: 0 0 12px; }
+  .lead {
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+  .card.tip {
+    background: var(--pink-light);
+    border-color: var(--pink);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .tech {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .tech .name {
+    font-weight: 700;
+    color: var(--pink);
+    font-size: 15px;
+  }
+  .tech .role {
+    font-size: 13px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+  .tech .what {
+    font-size: 13px;
+    margin-top: 8px;
+    color: var(--ink);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    vertical-align: top;
+  }
+  th {
+    background: var(--pink-light);
+    color: var(--pink);
+    font-weight: 600;
+  }
+  tr:last-child td { border-bottom: none; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .warn { color: var(--warn); font-weight: 600; }
+  .arrow-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 12px 0;
+  }
+  .arrow-flow .step {
+    background: var(--pink-light);
+    color: var(--pink);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .arrow-flow .arrow {
+    color: var(--gray);
+    font-size: 18px;
+  }
+  .timeline {
+    border-left: 3px solid var(--pink);
+    padding-left: 20px;
+    margin: 16px 0 16px 8px;
+  }
+  .timeline .item {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .timeline .item::before {
+    content: "";
+    position: absolute;
+    left: -27px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    background: var(--pink);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--pink);
+  }
+  .timeline .day { font-weight: 700; color: var(--pink); font-size: 13px; }
+  .timeline .work { font-size: 14px; }
+  .urls {
+    background: white;
+    border: 2px dashed var(--pink);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+  .urls a {
+    display: block;
+    color: var(--pink);
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 14px;
+    word-break: break-all;
+    padding: 6px 0;
+  }
+  .urls a:hover { text-decoration: underline; }
+  .arch {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .arch pre {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--ink);
+    white-space: pre;
+  }
+  .num-circle {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    background: var(--pink);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-right: 8px;
+  }
+  ul.simple { padding-left: 22px; }
+  ul.simple li { margin-bottom: 6px; }
+  footer {
+    text-align: center;
+    color: var(--gray);
+    font-size: 12px;
+    padding: 32px 16px;
+    margin-top: 40px;
+    border-top: 1px solid var(--line);
+  }
+  code.k {
+    background: var(--pink-light);
+    color: var(--pink);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    font-family: ui-monospace, monospace;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>ai_reaigame</h1>
+  <p class="sub">AIヒロインと会話して仲良くなる、恋愛シミュレーションのモバイルアプリ</p>
+  <div class="badges">
+    <span class="badge">2週間で開発</span>
+    <span class="badge">フルスタック</span>
+    <span class="badge">モバイル対応</span>
+    <span class="badge">公開URLあり</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<h2>このアプリは何？</h2>
+<p class="lead">
+プレイヤーは図書委員の先輩「花（はな）」と出会い、自由にチャットして関係を深めていく恋愛シミュレーションです。<br>
+返事は <strong>AI（人工知能）</strong> が考えるので、毎回違う反応が返ってきます。話し方によって <strong>好感度</strong> が上がったり下がったりして、関係性のフェーズが「知り合い → 気になる存在 → 親しい → 恋人未満」と変わっていきます。
+</p>
+
+<div class="card tip">
+  <strong>たとえばこんな会話</strong>
+  <ul class="simple">
+    <li>プレイヤー：「本、好きなんですね」</li>
+    <li>花：「わたしも本が好き。今は星と神話の話を集めた短編集を読んでるの。」 <span class="ok">好感度+4</span></li>
+    <li>プレイヤー：「うざい」</li>
+    <li>花：「…そういうこと言われると、少し悲しいかも。」 <span class="warn">好感度−4</span></li>
+  </ul>
+</div>
+
+<h2>遊び方の流れ</h2>
+<div class="arrow-flow">
+  <span class="step">ログイン</span>
+  <span class="arrow">▶</span>
+  <span class="step">キャラ選択</span>
+  <span class="arrow">▶</span>
+  <span class="step">冒頭シーン</span>
+  <span class="arrow">▶</span>
+  <span class="step">AIと自由会話</span>
+  <span class="arrow">▶</span>
+  <span class="step">好感度が動く</span>
+</div>
+<p>アプリを閉じても、次に開いたとき会話履歴と好感度はそのまま残っています（データベースに保存しているため）。</p>
+
+<h2>システムの全体像</h2>
+<p>アプリは大きく分けて <strong>3つの場所</strong> で動いています。</p>
+<div class="arch">
+<pre>
+   [スマホ／パソコンのブラウザ]               ←  プレイヤーが触る画面
+            │
+            │  HTTPS通信
+            ▼
+   [サーバー（Render.comに配置）]            ←  会話のやり取りを管理
+            │
+            ├── データベースに保存（履歴・好感度）
+            │      │
+            │      ▼
+            │   [PostgreSQL（Neonに配置）]
+            │
+            └── AIに返事を作ってもらう
+                   │
+                   ▼
+                [Google Gemini（AI）]
+</pre>
+</div>
+<ul class="simple">
+  <li><strong>画面（フロント）</strong>：Vercelという無料サービスで公開している</li>
+  <li><strong>サーバー（バック）</strong>：Renderという無料サービスで動かしている</li>
+  <li><strong>データベース</strong>：Neonという無料Postgresに会話を保存している</li>
+  <li><strong>AI</strong>：GoogleのGeminiという無料AIにつないでいる（求人要件のClaudeにも、AWSのBedrockにも、設定1つで切り替え可）</li>
+</ul>
+
+<h2>使っている技術（やさしく解説）</h2>
+<div class="grid">
+  <div class="tech">
+    <div class="name">React Native (Expo)</div>
+    <div class="role">画面を作る道具</div>
+    <div class="what">iPhone / Android / ブラウザの3つで同じコードが動かせる、Facebookが作ったライブラリ。</div>
+  </div>
+  <div class="tech">
+    <div class="name">NestJS</div>
+    <div class="role">サーバーの土台</div>
+    <div class="what">「ログインを処理する」「会話を保存する」など、決まった役割ごとにコードを整理しやすくしてくれる。</div>
+  </div>
+  <div class="tech">
+    <div class="name">TypeScript</div>
+    <div class="role">プログラミング言語</div>
+    <div class="what">JavaScriptに「型」というルールを追加した言語。間違いをパソコンが先に教えてくれる。</div>
+  </div>
+  <div class="tech">
+    <div class="name">PostgreSQL + Prisma</div>
+    <div class="role">データベース</div>
+    <div class="what">会話履歴や好感度を保管しておく場所。Prismaを使うとデータの取り出し・保存が簡単に書ける。</div>
+  </div>
+  <div class="tech">
+    <div class="name">Firebase Authentication</div>
+    <div class="role">ログイン機能</div>
+    <div class="what">Googleが提供しているユーザー登録・ログインの仕組み。自分でパスワード管理を作らなくていい。</div>
+  </div>
+  <div class="tech">
+    <div class="name">LangChain</div>
+    <div class="role">AIをつなげる道具</div>
+    <div class="what">Claude / Gemini / Bedrockなど、いろいろなAIを同じやり方で呼べるようにする共通の入り口。</div>
+  </div>
+  <div class="tech">
+    <div class="name">Docker</div>
+    <div class="role">アプリを箱詰めする技術</div>
+    <div class="what">「どのパソコンでも同じように動く箱」にアプリを詰める仕組み。サーバーへの引っ越しが楽になる。</div>
+  </div>
+  <div class="tech">
+    <div class="name">pnpm + Turborepo</div>
+    <div class="role">プロジェクトの整理</div>
+    <div class="what">画面とサーバーを1つのリポジトリにまとめて管理できる「モノレポ」を実現する道具。</div>
+  </div>
+  <div class="tech">
+    <div class="name">Claude Code (SDD)</div>
+    <div class="role">AI駆動開発</div>
+    <div class="what">AIアシスタントに「仕様書を見ながら実装して」と頼んで作る進め方。仕様と実装のズレを防げる。</div>
+  </div>
+</div>
+
+<h2>求人で求められていた技術 ＝ 実装した技術</h2>
+<table>
+  <thead>
+    <tr><th>求人MUST要件</th><th>実装内容</th><th>状態</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Claude Code経験</td><td><code class="k">.claude/commands/</code> でSDD用スラッシュコマンドを整備、Claude Codeで開発進行</td><td class="ok">あり</td></tr>
+    <tr><td>AI駆動開発（SDD）</td><td><code class="k">docs/specs/MVP.md</code> を仕様の正本にして、各コミットで仕様参照</td><td class="ok">あり</td></tr>
+    <tr><td>React</td><td>React Native (Expo) でモバイルとWebを同じコードから生成</td><td class="ok">あり</td></tr>
+    <tr><td>NestJS / TypeScript</td><td>auth / users / characters / chat / llm / rag をモジュール分割</td><td class="ok">あり</td></tr>
+    <tr><td>PostgreSQL / Prisma</td><td>4テーブル（User / Character / Conversation / Message）を Prisma で管理</td><td class="ok">あり</td></tr>
+    <tr><td>Docker → ECR / ECS</td><td>マルチステージDockerfileで本番イメージを生成、Render上で稼働中</td><td class="ok">あり</td></tr>
+    <tr><td>AWS Bedrock</td><td><code class="k">BedrockProvider</code> 実装済み。AWS資格情報を環境変数に入れるだけで切り替わる</td><td class="ok">あり</td></tr>
+    <tr><td>LangChain / RAG</td><td>LangChain.jsで3プロバイダー抽象、会話要約を再注入する最小RAG</td><td class="ok">あり</td></tr>
+    <tr><td>Firebase Authentication</td><td>NestJSにIDトークン検証ガードを実装、未設定時はDEVバイパスで動作</td><td class="ok">あり</td></tr>
+    <tr><td>モノレポ構成</td><td>pnpm workspaces + Turborepoで apps/* と packages/* を統合管理</td><td class="ok">あり</td></tr>
+  </tbody>
+</table>
+
+<h2>2週間でやったこと（時系列）</h2>
+<div class="timeline">
+  <div class="item">
+    <div class="day">Week 1 / Day 1〜2</div>
+    <div class="work">SDD仕様書を書いて、モノレポの土台（pnpm + Turborepo + Docker Compose）を作る</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 3</div>
+    <div class="work">NestJSにFirebase認証ガードを入れて、ユーザー作成のAPIを動かす</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 4</div>
+    <div class="work">AIに会話を投げるAPIを実装。LLMをあとで差し替えられる「抽象クラス」を用意</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 5〜6</div>
+    <div class="work">ExpoでログインからAIチャット画面までを通しで実装、ローカルでE2E動作確認</div>
+  </div>
+  <div class="item">
+    <div class="day">Week 2 / Day 8〜9</div>
+    <div class="work">LangChainでLLMをラップ、会話要約による最小RAGを追加</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 10〜12</div>
+    <div class="work">UI磨き込み（好感度バー、タイピングアニメ、アバター付きバブル）</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 13</div>
+    <div class="work">Dockerfile仕上げ、GitHub Actions CI追加、READMEとデモ台本</div>
+  </div>
+  <div class="item">
+    <div class="day">Day 14（v2拡張）</div>
+    <div class="work">Gemini / Bedrockプロバイダー追加、Render + Vercel + Neonで公開URLにデプロイ</div>
+  </div>
+</div>
+
+<h2>公開URL</h2>
+<div class="urls">
+  <strong>アプリを触る:</strong>
+  <a href="https://ai-reaigame-api-fgtc-au2iovbxq-appp1.vercel.app/">https://ai-reaigame-api-fgtc-au2iovbxq-appp1.vercel.app/</a>
+  <strong>API（参考）:</strong>
+  <a href="https://ai-reaigame-api.onrender.com/api/v1/health">https://ai-reaigame-api.onrender.com/api/v1/health</a>
+</div>
+<p style="font-size: 13px; color: var(--gray);">
+※ Renderの無料プランは15分アクセスが無いとサーバーが寝てしまうため、最初の表示に30秒〜60秒かかることがあります。
+</p>
+
+<h2>このプロジェクトのアピールポイント</h2>
+<div class="card">
+  <p><span class="num-circle">1</span><strong>求人MUSTの全項目を1作品で示せる</strong></p>
+  <p>「経験あります」と言葉で言うのではなく、すぐ動かせるコードと公開URLで見せられる。</p>
+</div>
+<div class="card">
+  <p><span class="num-circle">2</span><strong>AI部分が「差し替え可能な設計」になっている</strong></p>
+  <p>Claude / Gemini / Bedrock を環境変数1つで切り替えられる抽象を入れてある。新しいAIが出ても1日で対応できる。</p>
+</div>
+<div class="card">
+  <p><span class="num-circle">3</span><strong>Claude Codeを使った仕様駆動開発（SDD）を実践している</strong></p>
+  <p>仕様書を先に書き、AIアシスタントに「この仕様通りに実装して」と頼みながら開発。求人にあるAI駆動開発の経験そのもの。</p>
+</div>
+<div class="card">
+  <p><span class="num-circle">4</span><strong>クラウドに本当にデプロイされている</strong></p>
+  <p>「ローカルで動きました」ではなく、誰でもブラウザから触れる本番URLが存在する。</p>
+</div>
+<div class="card">
+  <p><span class="num-circle">5</span><strong>2週間という短期間でゼロから完成させた</strong></p>
+  <p>要件定義 → 実装 → テスト → デプロイまで一人で回せることを証明している。</p>
+</div>
+
+<h2>これからやれること（v3以降のアイデア）</h2>
+<ul class="simple">
+  <li>2人目・3人目のヒロインを追加する</li>
+  <li>会話シナリオを YAML で定義できるエンジンを作る</li>
+  <li>pgvector を使った本格的なRAG（キャラ設定の意味検索）に進化させる</li>
+  <li>AWS CDKでECS Fargateに本番デプロイし直す</li>
+  <li>RevenueCatで課金（スタミナ制）を実装</li>
+  <li>TestFlightでiOS実機配信</li>
+</ul>
+
+</div>
+
+<footer>
+  ai_reaigame — AI×恋愛シミュレーション ポートフォリオ作品 / 2026
+</footer>
+
+</body>
+</html>
