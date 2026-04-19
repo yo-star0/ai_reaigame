@@ -15,6 +15,7 @@ export class UsersController {
       id: user.id,
       firebaseUid: user.firebaseUid,
       displayName: user.displayName,
+      isAdmin: user.isAdmin,
     };
   }
 }
