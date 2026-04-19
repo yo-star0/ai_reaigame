@@ -3,6 +3,11 @@ import type {
   Character,
   CharacterDetail,
   MessagesPage,
+  ScenarioCompleteRequest,
+  ScenarioCreate,
+  ScenarioDetail,
+  ScenarioSummary,
+  ScenarioUpdate,
   SendMessageResponse,
   User,
 } from '@ai-reaigame/shared';
@@ -33,7 +38,7 @@ export function createApiClient(getIdToken: () => Promise<string | null>) {
   }
 
   return {
-    me: () => request<User>('/me'),
+    me: () => request<User & { isAdmin: boolean }>('/me'),
     listCharacters: () => request<Character[]>('/characters'),
     getCharacter: (id: string) => request<CharacterDetail>(`/characters/${id}`),
     completeOpening: (id: string) =>
@@ -47,6 +52,30 @@ export function createApiClient(getIdToken: () => Promise<string | null>) {
         method: 'POST',
         body: JSON.stringify({ content }),
       }),
+
+    listScenariosForCharacter: (characterId: string) =>
+      request<ScenarioSummary[]>(`/characters/${characterId}/scenarios`),
+    getScenario: (slug: string) => request<ScenarioDetail>(`/scenarios/${slug}`),
+    completeScenario: (slug: string, payload: ScenarioCompleteRequest) =>
+      request<{ ok: true; affinity: number; affinityDelta: number }>(
+        `/scenarios/${slug}/complete`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      ),
+
+    adminListScenarios: () => request<ScenarioSummary[]>('/admin/scenarios'),
+    adminGetScenario: (id: string) => request<ScenarioDetail>(`/admin/scenarios/${id}`),
+    adminCreateScenario: (payload: ScenarioCreate) =>
+      request<ScenarioDetail>('/admin/scenarios', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    adminUpdateScenario: (id: string, payload: ScenarioUpdate) =>
+      request<ScenarioDetail>(`/admin/scenarios/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      }),
+    adminDeleteScenario: (id: string) =>
+      request<{ ok: true }>(`/admin/scenarios/${id}`, { method: 'DELETE' }),
   };
 }
 

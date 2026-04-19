@@ -3,12 +3,14 @@ import { Link, useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
+import { useMe } from '@/hooks/useMe';
 import { useApi } from '@/lib/apiProvider';
 
 export default function CharactersScreen() {
   const api = useApi();
   const router = useRouter();
   const { signOut } = useAuth();
+  const { data: me } = useMe();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['characters'],
@@ -39,14 +41,23 @@ export default function CharactersScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>ヒロイン選択</Text>
-        <Pressable
-          onPress={async () => {
-            await signOut();
-            router.replace('/login');
-          }}
-        >
-          <Text style={styles.signOut}>ログアウト</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {me?.isAdmin && (
+            <Link href="/admin" asChild>
+              <Pressable style={styles.adminBtn}>
+                <Text style={styles.adminBtnText}>管理画面</Text>
+              </Pressable>
+            </Link>
+          )}
+          <Pressable
+            onPress={async () => {
+              await signOut();
+              router.replace('/login');
+            }}
+          >
+            <Text style={styles.signOut}>ログアウト</Text>
+          </Pressable>
+        </View>
       </View>
       <FlatList
         contentContainerStyle={{ padding: 16 }}
@@ -76,6 +87,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
   title: { fontSize: 22, fontWeight: '700' },
   signOut: { color: '#666' },
+  adminBtn: {
+    backgroundColor: '#2a2330',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  adminBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
