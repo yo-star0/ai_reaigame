@@ -54,6 +54,15 @@ export default function CharacterDetailScreen() {
           </Text>
         </Pressable>
 
+        <Pressable
+          style={styles.secondaryBtn}
+          onPress={() =>
+            router.push({ pathname: '/characters/[id]/scenarios', params: { id: characterId! } })
+          }
+        >
+          <Text style={styles.secondaryBtnText}>エピソードを選ぶ</Text>
+        </Pressable>
+
         {data.hasSeenOpening && (
           <Pressable onPress={onReplayOpening} style={styles.secondary}>
             <Text style={styles.secondaryText}>冒頭シーンをもう一度見る</Text>
@@ -80,6 +89,16 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   primaryText: { color: '#fff', fontWeight: '700' },
+  secondaryBtn: {
+    marginTop: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e66084',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+  },
+  secondaryBtnText: { color: '#e66084', fontWeight: '700' },
   secondary: {
     marginTop: 12,
     paddingVertical: 8,
