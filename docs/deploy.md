@@ -35,6 +35,7 @@
    | `GOOGLE_API_KEY` | AI Studio で発行した鍵 |
    | `CORS_ORIGINS` | Vercel の URL（後から追加可、例 `https://ai-reaigame.vercel.app`） |
    | `FIREBASE_*` | 空のままでOK（DEV バイパス） |
+   | `DEV_ADMIN_UIDS` | `demo-user`（カンマ区切りで管理者扱いにしたいUID。管理画面 `/admin` に入るのに必要） |
 
 4. Deploy。初回はビルドに 5〜10 分
 5. 完了したら `https://ai-reaigame-api.onrender.com/api/v1/health` にアクセスして `{"status":"ok"}` が返ることを確認

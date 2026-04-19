@@ -28,3 +28,5 @@ services:
         sync: false
       - key: FIREBASE_PRIVATE_KEY
         sync: false
+      - key: DEV_ADMIN_UIDS
+        value: "demo-user"

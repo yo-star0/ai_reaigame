@@ -293,9 +293,10 @@
   <h1>ai_reaigame</h1>
   <p class="sub">AIヒロインと会話して仲良くなる、恋愛シミュレーションのモバイルアプリ</p>
   <div class="badges">
-    <span class="badge">2週間で開発</span>
+    <span class="badge">3週間で開発</span>
     <span class="badge">フルスタック</span>
-    <span class="badge">モバイル対応</span>
+    <span class="badge">管理画面付き</span>
+    <span class="badge">選択肢分岐</span>
     <span class="badge">公開URLあり</span>
   </div>
 </header>
@@ -542,6 +543,106 @@
   </tbody>
 </table>
 
+<h2>v3 追加機能（作り込みラウンド・1週間）</h2>
+<p>
+MVP と公開URL完成後、<strong>恋愛シミュレーションゲームとしての厚み</strong>を増やす作り込みラウンドを1週間で実施。管理画面付きのCRUD、選択肢分岐、動的トーン、ステージ演出を追加。
+</p>
+
+<div class="grid">
+  <div class="tech">
+    <div class="name">シナリオ管理画面 /admin</div>
+    <div class="role">運用者目線のCRUD</div>
+    <div class="what">管理者（<code class="k">isAdmin=true</code>）だけが入れる編集画面。タイトル/あらすじ/解放好感度/公開トグルのフォームと、シーン・選択肢のインラインエディタを同梱。</div>
+  </div>
+  <div class="tech">
+    <div class="name">選択肢分岐エピソード</div>
+    <div class="role">DB駆動のシナリオ</div>
+    <div class="what">Scenario → Scene → Choice の3テーブル。選択肢ごとに好感度delta を持ち、完走時に合算で反映。</div>
+  </div>
+  <div class="tech">
+    <div class="name">ロックされた物語</div>
+    <div class="role">好感度ゲート</div>
+    <div class="what">未解放のシナリオはカードが伏せ字＋「好感度Nで解放」と表示。既読は既読ピルでマーキング。</div>
+  </div>
+  <div class="tech">
+    <div class="name">動的トーン切替</div>
+    <div class="role">関係フェーズ別の口調</div>
+    <div class="what">冷え切っている/気まずい/知り合い/気になる存在/親しい/恋人未満の6フェーズ。systemPromptに毎回「このフェーズではこう話して」を注入し、口調・呼び方が変化。</div>
+  </div>
+  <div class="tech">
+    <div class="name">CharacterStage</div>
+    <div class="role">アバター演出</div>
+    <div class="what">呼吸アニメ、表情（happy/neutral/sad/surprised）、応答中のHaloパルス。Live2Dの本格導入前の中間表現（v4で本採用予定）。</div>
+  </div>
+  <div class="tech">
+    <div class="name">AdminGuard + DEV_ADMIN_UIDS</div>
+    <div class="role">ロール制御</div>
+    <div class="what">Firebase IDトークン検証後に <code class="k">User.isAdmin</code> を見るガード。開発時は環境変数でUIDを管理者扱いにできる。</div>
+  </div>
+</div>
+
+<h3>v3 で増えた画面とエンドポイント</h3>
+<table>
+  <thead>
+    <tr><th>種別</th><th>パス</th><th>概要</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>画面</td><td><code class="k">/admin</code></td><td>シナリオ一覧・新規作成ボタン・公開/非公開ピル</td></tr>
+    <tr><td>画面</td><td><code class="k">/admin/scenarios/new</code></td><td>メタ情報フォーム、作成後は編集画面に遷移</td></tr>
+    <tr><td>画面</td><td><code class="k">/admin/scenarios/[id]</code></td><td>シーン・選択肢のインラインエディタ、並び替え、保存</td></tr>
+    <tr><td>画面</td><td><code class="k">/characters/[id]/scenarios</code></td><td>プレイヤー向けシナリオ一覧（ロック/既読ピル）</td></tr>
+    <tr><td>画面</td><td><code class="k">/scenarios/[slug]</code></td><td>シナリオ再生（選択肢分岐、完走時に好感度合算反映）</td></tr>
+    <tr><td>API</td><td><code class="k">GET /characters/:id/scenarios</code></td><td>キャラに紐づく公開済みシナリオ（ロック判定済み）</td></tr>
+    <tr><td>API</td><td><code class="k">GET /scenarios/:slug</code></td><td>シナリオ詳細（全シーン＋選択肢）</td></tr>
+    <tr><td>API</td><td><code class="k">POST /scenarios/:slug/complete</code></td><td>完走記録＋好感度加算</td></tr>
+    <tr><td>API</td><td><code class="k">GET/POST/PUT/DELETE /admin/scenarios</code></td><td>管理者用CRUD（AdminGuardで保護）</td></tr>
+  </tbody>
+</table>
+
+<h3>v3 で増えたデータモデル</h3>
+<div class="arch">
+<pre>
+User (既存)
+  └ isAdmin: Boolean @default(false)   ← 追加
+
+Scenario (新規)
+  ├ id, slug (unique), characterId
+  ├ title, synopsis
+  ├ unlockAffinity, published, order
+  └ scenes: Scene[]
+
+Scene (新規)
+  ├ scenarioId, key (unique within scenario)
+  ├ kind: "text" | "choice" | "end"
+  ├ body (本文), nextKey (遷移先)
+  └ choices: Choice[]
+
+Choice (新規)
+  ├ sceneId, label
+  ├ affinityDelta (-10..+10)
+  └ nextKey (遷移先シーンkey)
+
+ScenarioProgress (新規)
+  ├ userId, scenarioId
+  ├ completedAt, lastSceneKey
+</pre>
+</div>
+
+<h3>動的トーンの6フェーズ</h3>
+<table>
+  <thead>
+    <tr><th>好感度</th><th>フェーズ</th><th>話し方</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>≤ -21</td><td>冷え切っている</td><td>素っ気なく短い、距離を置く</td></tr>
+    <tr><td>-20..-1</td><td>気まずい</td><td>端的な敬語、冗談なし</td></tr>
+    <tr><td>0..14</td><td>知り合い</td><td>丁寧な敬語、「あなた」呼び</td></tr>
+    <tr><td>15..39</td><td>気になる存在</td><td>敬語と砕けた言葉が混ざる</td></tr>
+    <tr><td>40..69</td><td>親しい</td><td>タメ口、下の名前で呼ぶ</td></tr>
+    <tr><td>70+</td><td>恋人未満</td><td>砕けた口調、ときどき甘える</td></tr>
+  </tbody>
+</table>
+
 <h2>2週間でやったこと（時系列）</h2>
 <div class="timeline">
   <div class="item">
@@ -611,12 +712,13 @@
   <p>要件定義 → 実装 → テスト → デプロイまで一人で回せることを証明している。</p>
 </div>
 
-<h2>これからやれること（v3以降のアイデア）</h2>
+<h2>これからやれること（v4以降のアイデア）</h2>
 <ul class="simple">
+  <li>Live2D Cubism モデルの正式導入（今は擬似的なCharacterStageで中継中）</li>
   <li>2人目・3人目のヒロインを追加する</li>
-  <li>会話シナリオを YAML で定義できるエンジンを作る</li>
   <li>pgvector を使った本格的なRAG（キャラ設定の意味検索）に進化させる</li>
   <li>AWS CDKでECS Fargateに本番デプロイし直す</li>
+  <li>管理画面に下書き／バージョン管理機能（PostgreSQL側の世代管理）</li>
   <li>RevenueCatで課金（スタミナ制）を実装</li>
   <li>TestFlightでiOS実機配信</li>
 </ul>
