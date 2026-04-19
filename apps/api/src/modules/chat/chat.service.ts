@@ -5,6 +5,7 @@ import { LLM_PROVIDER, LlmMessage, LlmProvider } from '../llm/llm.provider';
 import { SummaryService } from '../rag/summary.service';
 import { Conversation, Message } from '@prisma/client';
 import { clampAffinity, parseLlmReply } from './parse-reply';
+import { buildPhaseInstruction } from './relationship-phase';
 
 const MAX_RAW_MESSAGES = 6;
 
@@ -118,7 +119,11 @@ export class ChatService {
   }
 
   private buildSystemPrompt(characterPrompt: string, conversation: Conversation): string {
-    const lines = [characterPrompt, '', `現在の好感度(affinity): ${conversation.affinity}`];
+    const lines = [
+      characterPrompt,
+      '',
+      buildPhaseInstruction(conversation.affinity),
+    ];
     if (conversation.summary) {
       lines.push('', '【これまでの関係の要約】', conversation.summary);
     }
