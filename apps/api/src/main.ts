@@ -5,11 +5,18 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const corsEnv = process.env.CORS_ORIGINS?.trim();
-  const corsOrigin = corsEnv
-    ? corsEnv.split(',').map((s) => s.trim()).filter(Boolean)
-    : true;
+  const corsOrigin = !corsEnv || corsEnv === '*'
+    ? true
+    : corsEnv.split(',').map((s) => s.trim()).filter(Boolean);
 
-  const app = await NestFactory.create(AppModule, { cors: { origin: corsOrigin, credentials: false } });
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: corsOrigin,
+      credentials: false,
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Authorization', 'Content-Type'],
+    },
+  });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
