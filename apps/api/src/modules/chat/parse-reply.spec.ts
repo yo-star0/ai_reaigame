@@ -11,6 +11,21 @@ describe('parseLlmReply', () => {
     expect(parseLlmReply(raw)).toEqual({ reply: 'ありがとう', affinityDelta: -1 });
   });
 
+  it('strips markdown code fences that Gemini sometimes emits', () => {
+    const raw = '```json\n{"reply":"hi","affinity_delta":2}\n```';
+    expect(parseLlmReply(raw)).toEqual({ reply: 'hi', affinityDelta: 2 });
+  });
+
+  it('accepts +N numbers that strict JSON would reject', () => {
+    const raw = '{"reply":"元気","affinity_delta":+1}';
+    expect(parseLlmReply(raw)).toEqual({ reply: '元気', affinityDelta: 1 });
+  });
+
+  it('regex-falls-back when JSON still cannot parse', () => {
+    const raw = '{"reply":"test","affinity_delta":+2,}';
+    expect(parseLlmReply(raw)).toEqual({ reply: 'test', affinityDelta: 2 });
+  });
+
   it('falls back to raw text when JSON is malformed', () => {
     const raw = '普通のテキスト';
     expect(parseLlmReply(raw)).toEqual({ reply: '普通のテキスト', affinityDelta: 0 });
@@ -18,12 +33,12 @@ describe('parseLlmReply', () => {
 
   it('falls back to 0 delta when schema validation fails', () => {
     const raw = '{"reply":"hi","affinity_delta":"high"}';
-    expect(parseLlmReply(raw)).toEqual({ reply: raw, affinityDelta: 0 });
+    expect(parseLlmReply(raw)).toEqual({ reply: 'hi', affinityDelta: 0 });
   });
 
-  it('clamps out-of-range deltas via schema reject (treated as raw)', () => {
+  it('clamps out-of-range deltas from the fallback regex', () => {
     const raw = '{"reply":"x","affinity_delta":9999}';
-    expect(parseLlmReply(raw)).toEqual({ reply: raw, affinityDelta: 0 });
+    expect(parseLlmReply(raw)).toEqual({ reply: 'x', affinityDelta: 5 });
   });
 });
 
