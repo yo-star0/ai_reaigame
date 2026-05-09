@@ -17,9 +17,13 @@ services:
       - key: CORS_ORIGINS
         sync: false              # set to the deployed Vercel URL
       - key: LLM_PROVIDER
-        value: gemini
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false              # https://console.groq.com で無料発行
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
       - key: GOOGLE_API_KEY
-        sync: false
+        sync: false              # fallback用（不要なら空でOK）
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
       - key: FIREBASE_PROJECT_ID

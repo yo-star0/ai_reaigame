@@ -7,6 +7,7 @@ import { BedrockProvider } from './bedrock.provider';
 import { StubProvider } from './stub.provider';
 
 import { OllamaProvider } from './ollama.provider';
+import { GroqProvider } from './groq.provider';
 
 function resolveProvider(config: ConfigService): LlmProvider {
   const logger = new Logger('LlmModule');
@@ -27,6 +28,11 @@ function resolveProvider(config: ConfigService): LlmProvider {
     logger.log('Using BedrockProvider');
     return new BedrockProvider(config);
   };
+  const tryGroq = () => {
+    if (!config.get<string>('GROQ_API_KEY')) return null;
+    logger.log('Using GroqProvider');
+    return new GroqProvider(config);
+  };
   const tryOllama = () => {
     logger.log('Using OllamaProvider');
     return new OllamaProvider(config);
@@ -41,8 +47,9 @@ function resolveProvider(config: ConfigService): LlmProvider {
   if (requested === 'anthropic') return tryAnthropic() ?? useStub();
   if (requested === 'gemini') return tryGemini() ?? useStub();
   if (requested === 'bedrock') return tryBedrock() ?? useStub();
+  if (requested === 'groq') return tryGroq() ?? useStub();
 
-  return tryAnthropic() ?? tryGemini() ?? tryBedrock() ?? tryOllama() ?? useStub();
+  return tryGroq() ?? tryAnthropic() ?? tryGemini() ?? tryBedrock() ?? tryOllama() ?? useStub();
 }
 
 @Global()
