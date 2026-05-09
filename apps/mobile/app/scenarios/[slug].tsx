@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -59,9 +60,7 @@ export default function ScenarioPlayScreen() {
       queryClient.invalidateQueries({ queryKey: ['character'] });
     },
     onError: (err) => {
-      import('react-native').then(({ Alert }) => {
-        Alert.alert('エラー', err instanceof Error ? err.message : String(err));
-      });
+      Alert.alert('エラー', err instanceof Error ? err.message : String(err));
     },
   });
 

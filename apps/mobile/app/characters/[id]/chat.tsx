@@ -238,9 +238,9 @@ function MessageBubble({ message, avatarUrl }: { message: Message; avatarUrl?: s
                     language: 'en-US', 
                     rate: 0.9, 
                     pitch: 1.3,
-                    onDone: resolve,
-                    onStopped: resolve,
-                    onError: resolve,
+                    onDone: () => resolve(),
+                    onStopped: () => resolve(),
+                    onError: () => resolve(),
                   });
                 });
               } else {
@@ -276,9 +276,9 @@ function MessageBubble({ message, avatarUrl }: { message: Message; avatarUrl?: s
                       language: 'ja-JP', 
                       rate: 1.0, 
                       pitch: 1.5,
-                      onDone: resolve,
-                      onStopped: resolve,
-                      onError: resolve,
+                      onDone: () => resolve(),
+                      onStopped: () => resolve(),
+                      onError: () => resolve(),
                     });
                   });
                 }
