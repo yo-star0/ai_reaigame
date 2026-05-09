@@ -2,6 +2,8 @@ import type { Message, SendMessageResponse } from '@ai-reaigame/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as Speech from 'expo-speech';
+import { Audio } from 'expo-av';
 import {
   ActivityIndicator,
   FlatList,
@@ -94,7 +96,17 @@ export default function ChatScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back} hitSlop={8}>
+        <Pressable 
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/');
+            }
+          }} 
+          style={styles.back} 
+          hitSlop={24}
+        >
           <Text style={styles.backText}>‹</Text>
         </Pressable>
         <View style={{ flex: 1, marginLeft: 4 }}>
@@ -134,7 +146,7 @@ export default function ChatScreen() {
           renderItem={({ item }) => (
             <MessageBubble message={item} avatarUrl={character?.avatarUrl} />
           )}
-          ListEmptyComponent={<Text style={styles.empty}>話しかけてみよう</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>話しかけてみよう（英語で話しかけると喜ぶかも…？）</Text>}
           ListFooterComponent={sendMutation.isPending ? <TypingIndicator /> : null}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
@@ -164,8 +176,21 @@ export default function ChatScreen() {
   );
 }
 
+let activePlaybackId = 0;
+let activeSound: Audio.Sound | null = null;
+
 function MessageBubble({ message, avatarUrl }: { message: Message; avatarUrl?: string }) {
   const isUser = message.role === 'user';
+  
+  let mainText = message.content;
+  let tipText = null;
+
+  if (!isUser && mainText.includes('【ワンポイント】')) {
+    const parts = mainText.split('【ワンポイント】');
+    mainText = parts[0].trim();
+    tipText = parts[1].trim();
+  }
+
   if (isUser) {
     return (
       <View style={[styles.row, styles.rowUser]}>
@@ -179,7 +204,91 @@ function MessageBubble({ message, avatarUrl }: { message: Message; avatarUrl?: s
     <View style={[styles.row, styles.rowAssistant]}>
       {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.bubbleAvatar} /> : <View style={styles.bubbleAvatarFallback} />}
       <View style={[styles.bubble, styles.bubbleAssistant]}>
-        <Text style={styles.textAssistant}>{message.content}</Text>
+        <Text style={styles.textAssistant}>{mainText}</Text>
+        {tipText && (
+          <View style={styles.tipBox}>
+            <Text style={styles.tipTitle}>💡 ワンポイント</Text>
+            <Text style={styles.tipText}>{tipText}</Text>
+          </View>
+        )}
+        <Pressable
+          onPress={async () => {
+            activePlaybackId++;
+            const myPlaybackId = activePlaybackId;
+
+            Speech.stop();
+            if (activeSound) {
+              try { await activeSound.stopAsync(); } catch (e) {}
+              try { await activeSound.unloadAsync(); } catch (e) {}
+              activeSound = null;
+            }
+
+            // 英語と日本語を分割するための正規表現（アルファベットを含むフレーズを抽出）
+            const regex = /([a-zA-Z]+(?:[\s.,!?'"’\-]+[a-zA-Z]+)*[\s.,!?'"’\-]*)/g;
+            const parts = mainText.split(regex).filter(p => p.trim().length > 0);
+
+            for (const part of parts) {
+              if (myPlaybackId !== activePlaybackId) return; // 別の再生が始まったら中止
+
+              const isEnglish = /[a-zA-Z]/.test(part);
+              if (isEnglish) {
+                // 英語部分：少し高めでネイティブな発音
+                await new Promise<void>((resolve) => {
+                  Speech.speak(part, { 
+                    language: 'en-US', 
+                    rate: 0.9, 
+                    pitch: 1.3,
+                    onDone: resolve,
+                    onStopped: resolve,
+                    onError: resolve,
+                  });
+                });
+              } else {
+                // 日本語部分：無料のVOICEVOX API（四国めたん等の可愛い声）を使用
+                try {
+                  const res = await fetch(`https://api.tts.quest/v3/voicevox/synthesis?text=${encodeURIComponent(part)}&speaker=2`);
+                  const data = await res.json();
+                  if (myPlaybackId !== activePlaybackId) return; // fetch中に別再生が来たら中止
+                  
+                  if (data.mp3StreamingUrl) {
+                    const { sound } = await Audio.Sound.createAsync(
+                      { uri: data.mp3StreamingUrl },
+                      { shouldPlay: true }
+                    );
+                    activeSound = sound;
+                    
+                    await new Promise<void>((resolve) => {
+                      sound.setOnPlaybackStatusUpdate((status) => {
+                        if (status.isLoaded && status.didJustFinish) {
+                          sound.unloadAsync().catch(()=>{});
+                          if (activeSound === sound) activeSound = null;
+                          resolve();
+                        }
+                      });
+                    });
+                  } else {
+                    throw new Error("No audio url");
+                  }
+                } catch (e) {
+                  // API失敗時のフォールバック（通常のOS音声）
+                  await new Promise<void>((resolve) => {
+                    Speech.speak(part, { 
+                      language: 'ja-JP', 
+                      rate: 1.0, 
+                      pitch: 1.5,
+                      onDone: resolve,
+                      onStopped: resolve,
+                      onError: resolve,
+                    });
+                  });
+                }
+              }
+            }
+          }}
+          style={styles.speakerBtn}
+        >
+          <Text style={styles.speakerIcon}>🔊 Listen</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -216,6 +325,11 @@ const styles = StyleSheet.create({
   bubbleAssistant: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0e0e6' },
   textUser: { color: '#fff', lineHeight: 20 },
   textAssistant: { color: '#333', lineHeight: 20 },
+  tipBox: { marginTop: 12, backgroundColor: '#fdf8f4', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#f7dfce' },
+  tipTitle: { fontSize: 12, fontWeight: '700', color: '#d97f48', marginBottom: 4 },
+  tipText: { fontSize: 12, color: '#666', lineHeight: 18 },
+  speakerBtn: { alignSelf: 'flex-end', marginTop: 6, backgroundColor: '#f0e0e6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  speakerIcon: { fontSize: 12, color: '#e66084', fontWeight: 'bold' },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

@@ -13,65 +13,39 @@ type Pattern = {
 
 const PATTERNS: Pattern[] = [
   {
-    match: /(本|読書|小説|物語)/,
+    match: /(本|読書|小説|物語|book|reading)/i,
     replies: [
-      'わたしも本が好き。今は星と神話の話を集めた短編集を読んでるの。',
-      '最近読んだ本、登場人物の一人があなたに少し似てたんだよ。',
-      'よかったら今度、図書室で本を選ぶの手伝って？',
+      "I love reading too! Currently I'm reading a collection of short stories about stars and myths.",
+      "The protagonist in the book I read recently reminded me a bit of you.",
+      "Would you like to help me choose a book at the library next time?",
     ],
     delta: [3, 5],
   },
   {
-    match: /(星|夜空|宇宙|月)/,
+    match: /(星|夜空|宇宙|月|star|sky|moon)/i,
     replies: [
-      '星、好きなんだね。今夜はきっと空が澄んでるよ。',
-      'ベガとアルタイル、どっちが好き？わたしはアルタイル派。',
-      '屋上に連れて行ったらもっと星の話ができそう。',
+      "You like stars? The sky will probably be clear tonight. (星が好きなんだね)",
+      "Which do you prefer, Vega or Altair? I'm an Altair fan.",
+      "If I take you to the rooftop, we could talk more about the stars.",
     ],
     delta: [3, 5],
   },
   {
-    match: /(好き|愛してる|かわいい|きれい)/,
+    match: /(こんにちは|やあ|おはよう|こんばんは|ハロー|hi|hello|hey)/i,
     replies: [
-      'うう、急にそんなこと言わないで…。耳、赤くなってない？',
-      'ふふ、そういうの、ちゃんと覚えておくからね。',
-      '…ありがとう。でも、照れるから次は前置きしてね。',
-    ],
-    delta: [4, 5],
-  },
-  {
-    match: /(こんにちは|やあ|おはよう|こんばんは|ハロー|hi)/i,
-    replies: [
-      'あ、来たんだ。ちょうど良い本を見つけたところ。',
-      'おかえり。少し前から続きを読んで待ってたんだよ。',
-      'こんにちは。今日はどんな話しよう？',
+      "Hello! I just found a really good book. (こんにちは！ちょうど良い本を見つけたところだよ)",
+      "Welcome back. I've been waiting for you to continue reading. (おかえりなさい)",
+      "Hi there! What shall we talk about today?",
     ],
     delta: [1, 2],
-  },
-  {
-    match: /(ばか|うざい|きらい|死ね)/,
-    replies: [
-      '…そういうこと言われると、少し悲しいかも。',
-      '本気で言ってる？ちょっと距離を置きたい気分。',
-    ],
-    delta: [-5, -3],
-  },
-  {
-    match: /\?|？/,
-    replies: [
-      'うーん、どうだろう。あなたはどう思う？',
-      'それ、ちょっと考えたことなかったな。教えてくれる？',
-      '難しい問いだね。でも、あなたとならゆっくり答えを探せる気がする。',
-    ],
-    delta: [1, 3],
   },
 ];
 
 const FALLBACKS: string[] = [
-  'そうなんだ。もう少し聞かせて？',
-  'ふふ、なんだか今日のあなた、いつもと違うね。',
-  'わたし、あなたと話してる時間、きらいじゃないよ。',
-  '続き、聞かせて。わたしはここにいるから。',
+  "Oh really? Tell me more! (そうなんだ。もう少し聞かせて？)",
+  "Hehe, you seem a bit different today. (ふふ、なんだか今日のあなた、いつもと違うね)",
+  "I don't dislike the time I spend talking with you... (あなたと話してる時間、きらいじゃないよ)",
+  "Please continue, I'm right here listening to you. (続きを聞かせて。わたしはここにいるから)",
 ];
 
 function pick<T>(arr: T[]): T {

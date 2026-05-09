@@ -46,6 +46,7 @@ export default function CharacterDetailScreen() {
 
         <View style={styles.affinityWrap}>
           <AffinityBar value={data.affinity} />
+          <Text style={styles.hintText}>英語で話しかけると好感度が上がりやすいかも？</Text>
         </View>
 
         <Pressable style={styles.primary} onPress={onStart}>
@@ -81,6 +82,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 28, fontWeight: '700', marginTop: 16 },
   tagline: { color: '#666', marginTop: 4, textAlign: 'center' },
   affinityWrap: { marginTop: 20, width: '100%', paddingHorizontal: 16 },
+  hintText: { fontSize: 12, color: '#888', textAlign: 'center', marginTop: 8 },
   primary: {
     marginTop: 24,
     backgroundColor: '#e66084',

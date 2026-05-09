@@ -58,6 +58,11 @@ export default function ScenarioPlayScreen() {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
       queryClient.invalidateQueries({ queryKey: ['character'] });
     },
+    onError: (err) => {
+      import('react-native').then(({ Alert }) => {
+        Alert.alert('エラー', err instanceof Error ? err.message : String(err));
+      });
+    },
   });
 
   if (isLoading || !data || !currentKey) {

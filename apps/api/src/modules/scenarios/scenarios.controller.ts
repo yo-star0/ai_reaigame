@@ -32,11 +32,10 @@ export class ScenariosController {
   }
 
   @Post('scenarios/:slug/complete')
-  @UsePipes(new ZodValidationPipe(scenarioCompleteRequestSchema))
   complete(
     @Param('slug') slug: string,
     @CurrentAuth() auth: AuthContext,
-    @Body() body: ScenarioCompleteRequest,
+    @Body(new ZodValidationPipe(scenarioCompleteRequestSchema)) body: ScenarioCompleteRequest,
   ) {
     return this.scenarios.completeScenario(
       slug,

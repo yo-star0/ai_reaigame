@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApi } from '@/lib/apiProvider';
 
@@ -44,13 +44,16 @@ export default function OpeningScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.scene}>
-        {lines.slice(0, index + 1).map((line, i) => (
-          <Text key={i} style={[styles.line, i === index && styles.lineActive]}>
-            {line}
-          </Text>
-        ))}
-      </View>
+      <ImageBackground source={{ uri: data.avatarUrl }} style={styles.scene} imageStyle={styles.sceneImage}>
+        <View style={styles.overlay} />
+        <View style={styles.textContainer}>
+          {lines.slice(0, index + 1).map((line, i) => (
+            <Text key={i} style={[styles.line, i === index && styles.lineActive]}>
+              {line}
+            </Text>
+          ))}
+        </View>
+      </ImageBackground>
 
       <Pressable
         style={styles.next}
@@ -71,8 +74,11 @@ export default function OpeningScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1a1620' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scene: { flex: 1, padding: 24, justifyContent: 'flex-end' },
-  line: { color: '#bbb', fontSize: 16, lineHeight: 24, marginBottom: 8 },
+  scene: { flex: 1 },
+  sceneImage: { opacity: 0.8 },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+  textContainer: { flex: 1, padding: 24, justifyContent: 'flex-end', paddingBottom: 40 },
+  line: { color: '#bbb', fontSize: 16, lineHeight: 24, marginBottom: 8, textShadowColor: '#000', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
   lineActive: { color: '#fff' },
   next: {
     backgroundColor: '#e66084',

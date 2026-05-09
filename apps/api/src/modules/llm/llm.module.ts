@@ -6,6 +6,8 @@ import { GeminiProvider } from './gemini.provider';
 import { BedrockProvider } from './bedrock.provider';
 import { StubProvider } from './stub.provider';
 
+import { OllamaProvider } from './ollama.provider';
+
 function resolveProvider(config: ConfigService): LlmProvider {
   const logger = new Logger('LlmModule');
   const requested = (config.get<string>('LLM_PROVIDER') ?? '').toLowerCase();
@@ -25,17 +27,22 @@ function resolveProvider(config: ConfigService): LlmProvider {
     logger.log('Using BedrockProvider');
     return new BedrockProvider(config);
   };
+  const tryOllama = () => {
+    logger.log('Using OllamaProvider');
+    return new OllamaProvider(config);
+  };
   const useStub = () => {
     logger.warn('Using StubProvider (no API key found)');
     return new StubProvider();
   };
 
   if (requested === 'stub') return useStub();
+  if (requested === 'ollama') return tryOllama();
   if (requested === 'anthropic') return tryAnthropic() ?? useStub();
   if (requested === 'gemini') return tryGemini() ?? useStub();
   if (requested === 'bedrock') return tryBedrock() ?? useStub();
 
-  return tryAnthropic() ?? tryGemini() ?? tryBedrock() ?? useStub();
+  return tryAnthropic() ?? tryGemini() ?? tryBedrock() ?? tryOllama() ?? useStub();
 }
 
 @Global()
